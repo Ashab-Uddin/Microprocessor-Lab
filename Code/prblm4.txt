@@ -1,0 +1,114 @@
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+    NEWLINE DB 10, 13, '$'
+    
+    NUM1 DB ?
+    NUM2 DB ? 
+    SUM DB 0
+    TEMP1 DB 0
+    TEMP2 DB 0
+    
+    MSG1 DB 'Enter number one: $'
+    MSG2 DB 'Enter number two: $'  
+    MSG3 DB 'Yes, Divided by 5 and 3 both.$' 
+    MSG4 DB 'Divided by 5 but not by 3$'
+    MSG5 DB 'Divided by 3 but not by 5$'
+    MSG6 DB 'Not Divided by 5 or 3$'
+    MSG7 DB 'Summation= $'
+
+.CODE
+MAIN PROC
+        MOV AX, @DATA
+        MOV DS, AX
+         
+         
+        LEA DX, MSG1
+        MOV AH, 9
+        INT 21H
+        
+        MOV AH, 1
+        INT 21H
+        SUB AL, 48
+        MOV NUM1, AL 
+                     
+                     
+                     
+        LEA DX, MSG2
+        MOV AH, 9
+        INT 21H
+        
+        MOV AH, 1
+        INT 21H
+        SUB AL, 48
+        MOV NUM2, AL   
+                      
+                      
+                      
+        MOV AL, NUM1
+        ADD AL, NUM2
+        MOV SUM, AL
+        
+        LEA DX, MSG7
+        MOV AH, 9
+        INT 21H
+        
+        MOV DL, SUM
+        ADD DL, 48
+        MOV AH, 2
+        INT 21H
+                 
+                 
+        
+        MOV BL, 5   
+        MOV AL, SUM    
+        DIV BL
+        MOV TEMP1, AH
+        
+        MOV BL, 3
+        MOV AL, SUM
+        DIV BL
+        MOV TEMP2, AH
+        
+        CMP TEMP1, 0
+        JNE CHECK3
+        
+        CMP TEMP2, 0
+        JNE PRINT2
+        JE PRINT1
+        
+CHECK3:
+        CMP TEMP2, 0
+        JE PRINT3
+        JMP PRINT4
+        
+PRINT1:
+        LEA DX, MSG3
+        MOV AH, 9
+        INT 21H 
+        JMP DONE
+        
+PRINT2:
+        LEA DX, MSG4
+        MOV AH, 9
+        INT 21H
+        JMP DONE
+        
+PRINT3:
+        LEA DX, MSG5
+        MOV AH, 9
+        INT 21H
+        JMP DONE
+        
+PRINT4:
+        LEA DX, MSG6
+        MOV AH, 9
+        INT 21H   
+        
+DONE:
+        MOV AH, 4CH
+        INT 21H
+        
+MAIN ENDP
+END MAIN

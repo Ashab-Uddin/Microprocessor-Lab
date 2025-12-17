@@ -1,0 +1,109 @@
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+    NEWLINE DB 10, 13, '$'
+    
+    PHN_NUM DB 20 DUP(?)
+    SUM DB 0
+     
+    MSG1 DB 'Enter your phone number: $' 
+    MSG2 DB 'Ascending Order: $' 
+    MSG3 DB 'AVG of the digits: $'
+
+.CODE
+MAIN PROC
+        MOV AX, @DATA
+        MOV DS, AX
+              
+        LEA DX, MSG1
+        MOV AH, 9
+        INT 21H
+               
+        MOV CL, 11
+        MOV SI, 0
+        
+INPUT_LOOP:
+        MOV AH, 1
+        INT 21H
+        SUB AL, 48
+        MOV PHN_NUM[SI], AL
+        INC SI  
+        
+        MOV AL, PHN_NUM[SI-1]
+        ADD SUM, AL
+        
+        DEC CL
+        JNZ INPUT_LOOP
+        
+        MOV CX, 11
+        MOV SI, 0
+
+SORT_OUTER:
+        MOV SI, 0
+        MOV DX, CX
+        DEC DX
+
+SORT_INNER:
+        MOV AL, PHN_NUM[SI]
+        MOV BL, PHN_NUM[SI+1]
+        CMP AL, BL
+        JLE NO_SWAP
+        MOV PHN_NUM[SI], BL
+        MOV PHN_NUM[SI+1], AL
+
+NO_SWAP:
+        INC SI
+        DEC DX
+        JNZ SORT_INNER
+        
+        DEC CX
+        CMP CX, 1
+        JG SORT_OUTER 
+         
+        LEA DX, NEWLINE
+        MOV AH, 9
+        INT 21H
+        
+        LEA DX, MSG2
+        MOV AH, 9
+        INT 21H
+        
+        MOV SI, 0 
+        MOV CL, 11
+        
+PRINT_LOOP:
+        MOV DL, PHN_NUM[SI]
+        ADD DL, 48
+        MOV AH, 2
+        INT 21H 
+        INC SI
+        DEC CL
+        JNZ PRINT_LOOP   
+                        
+                        
+                        
+        MOV AL, SUM 
+        MOV AH, 0
+        MOV BL, 11
+        DIV BL
+        MOV SUM, AL  
+                     
+        LEA DX, NEWLINE
+        MOV AH, 9
+        INT 21H             
+
+        LEA DX, MSG3
+        MOV AH, 9
+        INT 21H
+        
+        MOV DL, SUM
+        ADD DL, 48
+        MOV AH, 2
+        INT 21H  
+        
+        MOV AH, 4CH
+        INT 21H
+        
+MAIN ENDP
+END MAIN
