@@ -1,0 +1,729 @@
+﻿Input from user:
+1. Input from user:
+
+
+.MODEL SMALL
+.STACK 100H
+.CODE
+
+
+MAIN PROC 
+    ;INPUT A NUMBER
+    MOV AH,1
+    INT 21H
+    MOV BL,AL
+    
+    ;print newline
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+  
+    
+    ;INPUT ANOTHER NUMBER
+    MOV AH,1
+    INT 21H
+    MOV BH,AL
+    
+    ;print newline
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+  
+    
+    ;DISPLAY FIRST NUMBER
+    
+    MOV AH,2
+    MOV DL,BL
+    INT 21H
+    
+    ;print newline
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+  
+    
+    
+    ;DISPLAY SECOND VALUE
+    MOV AH,2
+    MOV DL,BH
+    INT 21H
+    
+    EXIT:
+    MOV AH,4CH
+    INT 21H
+    MAIN ENDP
+END MAIN
+
+
+* When a number initialize this number print
+.MODEL SMALL
+.STACK 100H
+.DATA
+MSG DB 3
+MSG1 DB ?
+.CODE
+
+
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    MOV AH,2
+    ADD MSG,48
+    MOV DL,MSG
+    INT 21H   
+    
+    EXIT:
+    MOV AH,4CH
+    INT 21H
+    
+    
+    MAIN ENDP
+END MAIN
+
+
+* INPUT  FROM USER AND SAVE A VARIABLE AND PRINT THIS
+                .MODEL SMALL
+.STACK 100H
+.DATA
+MSG DB 3
+MSG1 DB ?
+.CODE
+
+
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX        
+    
+    MOV AH,2
+    ADD MSG,48
+    MOV DL,MSG
+    INT 21H   
+    
+    ;NEWLINE
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H 
+    
+    ;store a value in msg1
+    MOV AH,1
+    INT 21H
+    MOV MSG1,AL
+    
+    ;PRINT NEWLINE
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+    
+    ;DISPLAY
+    MOV AH,2
+    MOV DL,MSG1
+    INT 21H  
+    
+    EXIT:
+    MOV AH,4CH
+    INT 21H
+    
+    
+    MAIN ENDP
+END MAIN
+
+
+
+
+
+
+
+
+* HOW TO INPUT A NUMBER AND HOW TO DISPLAY A STRING 
+.MODEL SMALL
+.STACK 100H
+.DATA
+M DB "HOW TO SHOW A STRING $"
+.CODE
+MAIN PROC
+    ;1->SINGLE KEY INPUT
+    ;2->SINGLE CHARACTER OUTPUT
+    ;9->CHARACTER STRING OUTPUT  
+    
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    
+    ;HOW THIS TEXT WHICH IS STORE IN M VARIABLE
+    MOV AH,9
+    LEA DX,M
+    INT 21H 
+    
+    
+    ;1->SINGLE KEY INPUT
+    MOV AH,1
+    INT 21H
+    MOV BL,AL 
+    
+    ;NEW LINE
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+    
+    ;2->SHOW SINGLE CHARACTER 
+    
+    MOV AH,2
+    MOV DL,BL
+    INT 21H
+    
+    EXIT:
+    MOV AH,4CH
+    INT 21H
+    
+    MAIN ENDP
+END MAIN
+
+
+
+
+* Print A-Z alphabet using Loop concept
+.MODEL SMALL
+.STACK 100H
+.DATA
+A DB "lOOP CONCEPT $"
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+             
+    ;Print the loop concept message         
+    MOV AH,9
+    LEA DX,A
+    INT 21H
+    
+    ;Print newline
+    MOV AH,2
+    MOV DL,10
+    INT 21H
+    MOV DL,13
+    INT 21H
+    
+    
+    ;LOOP CONCEPT START(Print the alphabet A-Z)
+    MOV CX,26
+    MOV AH,2
+    MOV DL, 'A'
+    
+    LEVEL1:
+    INT 21H
+    INC DL
+    LOOP LEVEL1
+    
+    EXIT:
+    MOV AH,4CH
+    INT 21H
+    MAIN ENDP
+END MAIN
+    
+    
+* JMP Concept
+.MODEL SMALL
+.STACK 100H
+.DATA
+A DB "JMP CONCEPT $"
+B DB "ASSEMBLY LANGUAGE $"
+C DB "PROGRAMMING $"
+.CODE
+
+
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    MOV AH,9
+    LEA DX,A
+    INT 21H 
+    
+    MOV AH,2
+    MOV DL,10
+    INT 21H
+    MOV DL,13
+    INT 21H
+    
+   M:
+   MOV AH,9
+   LEA DX,B
+   INT 21H
+   JMP N
+   
+   N:
+   MOV AH,9
+   LEA DX,C
+   INT 21H
+   JMP EXIT
+   
+   EXIT:
+   MOV AH,4CH
+   INT 21H
+   MAIN ENDP
+END MAIN
+
+
+* Add two number
+.model small
+.stack 100h
+.data
+a db "Enter first number:$"
+b db "Enter second number:$"
+c db "Summation of two number:$"
+
+
+.code
+main proc
+    mov ax,@data
+    mov ds,ax
+    
+    mov ah,9
+    lea dx,a
+    int 21h
+    
+    mov ah,1
+    int 21h
+    mov bl,al
+             
+    ;newline
+    mov ah,2
+    mov dl,10
+    int 21h
+    mov dl,13
+    int 21h
+    
+    mov ah,9
+    lea dx,b
+    int 21h
+    
+    mov ah,1
+    int 21h
+    mov bh,al  
+    
+    ;newline
+    mov ah,2
+    mov dl,10
+    int 21h
+    mov dl,13
+    int 21h
+    
+    mov ah,9
+    lea dx,c
+    int 21h
+    
+    add bl,bh;bl=bl+bh
+    sub bl,48
+    mov ah,2
+    mov dl,bl
+    int 21h
+    
+    exit:
+    mov ah,4ch
+    int 21h
+    main endp
+end main
+
+
+
+
+
+
+    
+    
+
+
+Tab 3
+* Perform addition, subtraction, multiplication and division of 7 and 2 these two numbers in a single code. Show them as output in the console.
+.MODEL SMALL
+.STACK 100H
+
+
+.DATA
+    N1 DB 7
+    N2 DB 2
+    
+    MSG1 DB 'Summertion: $' 
+    MSG2 DB 'Subtruction: $'
+    MSG3 DB 'Multiplication: $'
+    MSG4 DB 'Devition: $'  
+    
+    NEWLINE DB 13, 10, '$' 
+    
+    
+    
+.CODE
+MAIN PROC
+    
+    MOV AX, @DATA
+    MOV DS, AX
+       
+       
+                                      
+    
+    ; summetion
+    MOV AL, N1
+    ADD AL, N2 
+    MOV BL, AL  
+    
+    LEA DX, MSG1
+    MOV AH, 9
+    INT 21H
+    
+    MOV DL, BL
+    ADD DL, '0'
+    MOV AH, 2
+    INT 21H      
+    
+    
+    ; print newline
+    LEA DX, NEWLINE
+    MOV AH, 9
+    INT 21H
+         
+         
+         
+               
+               
+    ; subtruction
+    MOV AL, N1
+    SUB AL, N2 
+    MOV BL, AL  
+
+
+    LEA DX, MSG2
+    MOV AH, 9
+    INT 21H
+    
+    MOV DL, BL
+    ADD DL, '0'
+    MOV AH, 2
+    INT 21H 
+                
+                
+    ; print newline
+    LEA DX, NEWLINE
+    MOV AH, 9
+    INT 21H
+             
+             
+                
+    
+    ; multiplication
+    MOV AL, N1
+    MUL N2 
+    MOV BL, AL
+
+
+    LEA DX, MSG3
+    MOV AH, 9
+    INT 21H
+               
+    
+    
+    ; print double digit   
+    MOV AH, 0           
+    MOV AL, BL
+    MOV BL, 10
+    DIV BL
+    MOV BL, AL             
+    MOV BH, AH            
+                              
+    MOV DL, BL
+    ADD DL, '0'
+    MOV AH, 2
+    INT 21H   
+    
+    MOV DL, BH
+    ADD DL, '0'
+    MOV AH, 2
+    INT 21H  
+             
+               
+    ; print newline
+    LEA DX, NEWLINE
+    MOV AH, 9
+    INT 21H
+       
+       
+       
+               
+    
+    ; devition 
+    MOV AH, 0
+    MOV AL, N1
+    DIV N2 
+    MOV BL, AL  
+
+
+    LEA DX, MSG4
+    MOV AH, 9
+    INT 21H
+    
+    MOV DL, BL
+    ADD DL, '0'
+    MOV AH, 2
+    INT 21H     
+          
+          
+          
+               
+               
+    
+    MOV AH, 4CH
+    INT 21H 
+
+
+MAIN ENDP
+END MAIN
+
+
+
+
+
+
+
+
+Tab 4
+* Take a single digit number (N) as user input and then print in this sequence: 1, 2, … , N-1, N Sample: Enter a number = 7 Output: 1 2 3 4 5 6 7
+.MODEL SMALL
+.STACK 100H
+
+
+.DATA   
+    NUM1 DB 1
+    NUM2 DB ?
+    
+    MSG1 DB 'Enter a number: $'
+    MSG2 DB 'Output: $'   
+    
+    NEWLINE DB 13, 10, '$'
+
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+                      
+    LEA DX, MSG1
+    MOV AH, 9
+    INT 21H
+    
+    MOV AH, 1
+    INT 21H
+    SUB AL, 48
+    MOV NUM2, AL   
+    
+    
+     ; print newline
+    LEA DX, NEWLINE
+    MOV AH, 9
+    INT 21H
+    
+    LEA DX, MSG2
+    MOV AH, 9
+    INT 21H
+
+
+PRINT_LOOP:
+    MOV DL, NUM1
+    ADD DL, 48
+    MOV AH, 2
+    INT 21H   
+    
+    MOV DL, ' '
+    MOV AH, 2
+    INT 21H
+    
+    INC NUM1 
+    MOV AL, NUM1
+    CMP AL, NUM2
+    JLE PRINT_LOOP      
+    
+    
+    
+    MOV AH, 4CH
+    INT 21H
+MAIN ENDP
+END MAIN
+
+
+* Take a single digit number as user input and then print the number in this sequence: Enter a number = 7 Output: 7 6 5 4 3 2 1 0
+.MODEL SMALL
+.STACK 100H
+
+
+.DATA   
+    NUM1 DB ?        ; Store the starting value (entered number)
+          ; Store the entered number
+    
+    MSG1 DB 'Enter a number: $'
+    MSG2 DB 'Output: $'   
+    
+    NEWLINE DB 13, 10, '$'
+
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+                      
+    LEA DX, MSG1
+    MOV AH, 9
+    INT 21H
+    
+    MOV AH, 1
+    INT 21H
+    SUB AL, 48         
+    MOV NUM1, AL          
+    
+    ; print newline
+    LEA DX, NEWLINE
+    MOV AH, 9
+    INT 21H
+    
+    LEA DX, MSG2
+    MOV AH, 9
+    INT 21H
+
+
+   
+    
+PRINT_LOOP:
+    MOV DL, NUM1      
+    ADD DL, 48         
+    MOV AH, 2
+    INT 21H            
+    
+    MOV DL, ' '        
+    MOV AH, 2
+    INT 21H
+    
+    DEC NUM1          
+    MOV AL, NUM1
+    CMP AL, 0        
+    JG PRINT_LOOP     
+    
+    MOV AH, 4CH        
+    INT 21H
+MAIN ENDP
+END MAIN
+
+
+;PROCEDURE CONCEPT
+.MODEL SMALL
+.STACK 100H
+.DATA
+  STR DB "I AM ASHAB,TODAY FUCKING LAB FINAL$"
+.CODE
+
+
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    CALL USER
+    
+    MOV AH,2
+    MOV DL,10
+    INT 21H
+    MOV DL,13
+    INT 21H
+    
+    MOV DX,OFFSET STR 
+    
+    MOV AH,9
+    INT 21H
+    
+    MOV AH,4CH
+    INT 21H
+    
+    
+    MAIN ENDP 
+
+
+    USER PROC 
+    MOV DX,OFFSET STR
+    MOV AH,9
+    INT 21H
+    
+    RET  
+    
+    USER ENDP
+
+
+Tab 5
+* Addition of Two Numbers (User Input)
+.MODEL SMALL
+.STACK 100h
+.DATA
+    MSG1 DB 'Enter first number: $'
+    MSG2 DB 'Enter second number: $'
+    MSG3 DB 'The sum is: $'
+    NUM1 DB ?
+    NUM2 DB ?
+    RESULT DB ?
+
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+
+    ; Prompt user for first number
+    MOV AH, 09h
+    MOV DX, OFFSET MSG1
+    INT 21h
+    MOV AH, 01h
+    INT 21h      ; Get input into AL
+    SUB AL, 30h  ; Convert ASCII to integer
+    MOV NUM1, AL
+
+
+    ; Prompt user for second number
+    MOV AH, 09h
+    MOV DX, OFFSET MSG2
+    INT 21h
+    MOV AH, 01h
+    INT 21h      ; Get input into AL
+    SUB AL, 30h  ; Convert ASCII to integer
+    MOV NUM2, AL
+
+
+    ; Add the numbers
+    MOV AL, NUM1        ; Load NUM1 into AL
+    ADD AL, NUM2        ; AL = AL + NUM2
+    MOV RESULT, AL      ; Store result in RESULT
+
+
+    ; Display result
+    MOV AH, 09h
+    MOV DX, OFFSET MSG3
+    INT 21h
+    MOV DL, RESULT
+    ADD DL, 30h        ; Convert back to ASCII
+    MOV AH, 02h
+    INT 21h
+
+
+    ; Exit program
+    MOV AH, 4Ch
+    INT 21h 
+    MAIN ENDP
+
+
+END MAIN

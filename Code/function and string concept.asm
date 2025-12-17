@@ -1,0 +1,44 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+M DB "HOW TO SHOW A STRING $"
+.CODE
+MAIN PROC
+    ;1->SINGLE KEY INPUT
+    ;2->SINGLE CHARACTER OUTPUT
+    ;9->CHARARCTER STRING OUTPUT  
+    
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    
+    ;HOW THIS TEXT WHICH IS STORE IN M VARIABLE
+    MOV AH,9
+    LEA DX,M
+    INT 21H 
+    
+    
+    ;1->SINGLE KEY INPUT
+    MOV AH,1
+    INT 21H
+    MOV BL,AL 
+    
+    ;NEW LINE
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+    
+    ;2->SHOW SINGLE CHARATER 
+    
+    MOV AH,2
+    MOV DL,BL
+    INT 21H
+    
+    EXIT:
+    MOV AH,4CH
+    INT 21H
+    
+    MAIN ENDP
+END MAIN

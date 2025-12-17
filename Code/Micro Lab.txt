@@ -1,0 +1,365 @@
+﻿1.
+.MODEL SMALL
+.STACK 100H
+.DATA
+A DB ?
+B DB ?
+RESULT DB ?
+STR DW "Enter your number: $"
+.CODE
+
+
+MAIN PROC
+       MOV AX,@DATA
+       MOV DS, AX
+       
+       MOV DX, OFFSET STR
+       MOV AH,9
+       INT 21H
+       
+       
+       MAIN ENDP
+END MAIN
+
+
+2. Input 2 number from user than sum those number
+.MODEL SMALL
+.STACK 100H
+
+
+.DATA
+A DW ?
+B DW ?
+RESULT DW ?
+STR1 DB "Enter your first number: $"
+STR2 DB "Enter your second number: $"
+STR3 DB "Result of Sum is: $"
+
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX  
+   
+   
+    ; string output
+    MOV DX, OFFSET STR1
+    MOV AH, 9
+    INT 21H
+   
+    ; int input
+    MOV AH, 1
+    INT 21H
+    SUB AX, 48    
+    MOV A,AX 
+     
+     ;print newline
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+   
+    ; string output
+    MOV DX, OFFSET STR2
+    MOV AH, 9
+    INT 21H
+   
+    ; int input
+    MOV AH, 1
+    INT 21H
+    SUB AX, 48
+    MOV B, AX
+
+
+    ; addition
+    MOV AX, A
+    ADD AX, B
+    MOV RESULT, AX 
+      
+    ;print newline
+    MOV AH,2
+    MOV DL,13
+    INT 21H
+    MOV DL,10
+    INT 21H
+
+
+   
+    ; Show result message
+    MOV DX, OFFSET STR3
+    MOV AH, 9
+    INT 21H
+    
+    
+
+
+    ; print result
+    MOV AX, RESULT
+    ADD AX, 48
+    MOV DX, AX
+    MOV AH, 2
+    INT 21H
+
+
+MAIN ENDP
+END MAIN
+
+
+
+
+***** SUM OF THE ARRAY VALUE AND PRINT THIS ARRAY
+.MODEL SMALL
+.STACK 100H
+.DATA
+A DB 2,1,2,3
+B DB 5 DUP(0);5=SIZE & 0 INILI
+C DB 5 DUP(?) 
+RESULT DB ?
+STR DW "Enter your Number:$"
+STR1 DW "Sum of the Number:$"
+STR2 DW "Your Given Array:$"
+.CODE
+MAIN PROC
+     MOV AX,@DATA
+     MOV DS,AX
+     
+     MOV DX,OFFSET STR
+     MOV AH,9
+     INT 21H
+     
+     MOV AH,2
+     MOV DL,13
+     INT 21H
+     MOV DL,10
+     INT 21H
+     
+     MOV CX,0
+     MOV CL,5
+     MOV SI,0
+     MOV AX,0
+     
+     INPUT:
+     MOV AH,1
+     INT 21H
+     SUB AL,30H
+     MOV C[SI],AL
+     INC SI
+     LOOP INPUT
+     
+     MOV AX,0
+     MOV CX,0
+     MOV CL,5
+     MOV SI,0
+     
+     
+     SUM:
+     ADD AL,C[SI]
+     INC SI
+     LOOP SUM
+     
+     ADD AL,30H
+     MOV RESULT,AL
+     
+     ;PRINT NEWLINE
+     MOV AH,2
+     MOV DL,13
+     INT 21H
+     MOV DL,10
+     INT 21H 
+     
+     ;----- DISPLAY ARRAY -----
+    MOV DX,OFFSET STR2
+    MOV AH,9
+    INT 21H
+     
+    MOV SI,0
+    MOV CL,5
+
+
+PRINT_ARRAY:
+     MOV DL,C[SI]
+     ADD DL,30H
+     MOV AH,2
+     INT 21H
+     INC SI
+     LOOP PRINT_ARRAY
+ 
+
+
+;PRINT NEWLINE
+     MOV AH,2
+     MOV DL,13
+     INT 21H
+     MOV DL,10
+     INT 21H
+
+
+     
+     MOV DX,OFFSET STR1
+     MOV AH,9H
+     INT 21H
+     
+     MOV DX,0
+     MOV DL,RESULT
+     MOV AH,2
+     INT 21H
+    
+    
+    
+    
+    MAIN ENDP
+END MAIN
+
+
+
+
+### input from user to add and sub using macro
+
+
+PRINT MACRO MSG
+    MOV DX, OFFSET MSG
+    MOV AH, 9
+    INT 21H
+ENDM
+
+
+ADD_NUM MACRO A, B, RESULT
+    MOV AL, A
+    ADD AL, B
+    MOV RESULT, AL
+ENDM
+
+
+SUB_NUM MACRO A, B, RESULT
+    MOV AL, A
+    SUB AL, B
+    MOV RESULT, AL
+ENDM
+
+
+
+
+
+
+.MODEL SMALL
+.STACK 100H
+.DATA
+MSG1 DB "Enter your first number: $"
+MSG2 DB "Enter your second number: $"
+MSG_ADD DB "Summation: $"
+MSG_SUB DB "Subtraction: $"
+
+
+NUM1 DB ?
+NUM2 DB ?
+RES  DB ?
+
+
+
+
+
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+
+
+
+    PRINT MSG1
+    CALL NEWLINE
+
+
+    MOV AH, 1
+    INT 21H           
+    SUB AL, 30H       
+    MOV NUM1, AL
+
+
+    
+    CALL NEWLINE
+    
+    PRINT MSG2
+    CALL NEWLINE
+
+
+    MOV AH, 1
+    INT 21H
+    SUB AL, 30H
+    MOV NUM2, AL
+
+
+    CALL NEWLINE
+
+
+
+
+
+
+;   ADD
+
+
+    ADD_NUM NUM1, NUM2, RES
+
+
+    PRINT MSG_ADD
+    
+    CALL NEWLINE
+
+
+    MOV DL, RES
+    ADD DL, 30H       
+    MOV AH, 2
+    INT 21H
+
+
+    CALL NEWLINE
+
+
+
+
+
+
+;   SUB 
+
+
+    SUB_NUM NUM1, NUM2, RES
+
+
+    PRINT MSG_SUB
+    CALL NEWLINE
+
+
+    MOV DL, RES
+    ADD DL, 30H
+    MOV AH, 2
+    INT 21H
+
+
+    CALL NEWLINE
+
+
+
+
+
+
+    MOV AH, 4CH
+    INT 21H
+
+
+MAIN ENDP
+
+
+NEWLINE PROC
+    MOV AH, 2
+    MOV DL, 13
+    INT 21H
+    MOV DL, 10
+    INT 21H
+    RET
+NEWLINE ENDP
+
+
+END MAIN
