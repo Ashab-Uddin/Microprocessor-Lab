@@ -1,0 +1,322 @@
+﻿Name:Ashab Uddin
+ID: 232002274
+Section: 232_D1
+
+
+
+
+Answer Question no: 1
+
+
+.MODEL SMALL
+.STACK 100H
+.DATA 
+NUM DB ?
+STR DB "ENTER THE NUMBER: $"
+STR1 DB "RESULT: $" 
+ NEWLINE DB 13, 10, '$'
+.CODE
+
+
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    LEA DX, STR
+    MOV AH,9
+    INT 21H
+    
+    MOV AH,1
+    INT 21H
+    SUB AL,48
+    MOV NUM,AL
+     
+    
+    CMP NUM,5
+    JB MULTIPLICATION
+    JAE END_CODE
+    
+    MULTIPLICATION:
+    MOV AL,NUM
+    MOV BL,2
+    MUL BL
+    MOV NUM,AL 
+    
+    END_CODE: 
+    
+    LEA DX,NEWLINE
+    MOV AH,9
+    INT 21H
+    
+    LEA DX, STR1
+    MOV AH,9
+    INT 21H
+    
+    MOV DL,NUM
+    ADD DL,48
+    MOV AH,2
+    INT 21H
+    
+    
+   
+    
+    MOV AH,4CH
+    INT 21H
+    
+    MAIN ENDP
+END MAIN
+    
+    
+    Answer Question no: 02
+
+
+.MODEL SMALL
+.STACK 100H
+
+
+.DATA
+STR1 DB "HOW MANY NUMBERS (1-9): $"
+STR2 DB 0DH,0AH,"ENTER NUMBER: $"
+STR3 DB 0DH,0AH,"SUM OF EVEN NUMBERS: $"
+STR4 DB 0DH,0AH,"SUM OF ODD NUMBERS: $"
+
+
+ARR DB 20 DUP(?)
+
+
+N    DB ?
+EVEN DB 0
+ODD  DB 0
+
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+
+
+    MOV AH,9H
+    MOV DX,OFFSET STR1
+    INT 21H
+
+
+    MOV AH,1H
+    INT 21H
+    SUB AL,30H
+    MOV N,AL
+
+
+    MOV SI,0
+    MOV CX,0
+    MOV CL,N
+
+
+INPUT_LOOP:
+    MOV AH,9H
+    MOV DX,OFFSET STR2
+    INT 21H
+
+
+    MOV AH,1H
+    INT 21H
+    SUB AL,30H
+
+
+    MOV ARR[SI],AL
+    INC SI
+    LOOP INPUT_LOOP
+
+
+    MOV SI,0
+    MOV CX,0
+    MOV CL,N
+    MOV EVEN,0
+    MOV ODD,0
+
+
+SUM_LOOP:
+    MOV AL,ARR[SI]
+    INC SI
+
+
+    MOV BL,AL
+    AND AL,1
+    JZ EVEN_NUM
+
+
+    ADD ODD,BL
+    JMP NEXT_NUM
+
+
+EVEN_NUM:
+    ADD EVEN,BL
+
+
+NEXT_NUM:
+    LOOP SUM_LOOP
+
+
+    MOV AH,9H
+    MOV DX,OFFSET STR3
+    INT 21H
+
+
+    MOV AL,EVEN
+    CALL PRINT_2DIGIT
+
+
+    MOV AH,9H
+    MOV DX,OFFSET STR4
+    INT 21H
+
+
+    MOV AL,ODD
+    CALL PRINT_2DIGIT
+
+
+    MOV AH,4CH
+    INT 21H
+MAIN ENDP
+
+
+PRINT_2DIGIT PROC
+    XOR AH,AH
+    MOV BL,10
+    DIV BL
+
+
+    MOV BH,AH
+
+
+    ADD AL,30H
+    MOV DL,AL
+    MOV AH,2H
+    INT 21H
+
+
+    MOV AL,BH
+    ADD AL,30H
+    MOV DL,AL
+    MOV AH,2H
+    INT 21H
+
+
+    RET
+PRINT_2DIGIT ENDP
+
+
+END MAIN
+
+
+
+
+Answer Question no: 03
+
+
+PRINT MACRO MSG
+    MOV DX, OFFSET MSG
+    MOV AH, 9
+    INT 21H
+ENDM
+
+
+
+
+SQU_NUM MACRO A, RESULT
+    MOV AL, A
+    MUL AL             
+    MOV RESULT, AL      
+ENDM
+
+
+
+
+.MODEL SMALL
+.STACK 100H
+
+
+.DATA
+MSG1     DB "Enter your number (0-9): $"
+MSG_SQU DB "SQUARE: $"
+
+
+NUM1 DB ?
+RES  DB ?
+
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+
+   
+    PRINT MSG1
+    CALL NEWLINE
+
+
+    
+    MOV AH, 1
+    INT 21H
+    SUB AL, 30H         
+    MOV NUM1, AL
+
+
+    CALL NEWLINE
+
+
+   
+    SQU_NUM NUM1, RES
+
+
+   
+    PRINT MSG_SQU
+
+
+   
+    MOV AL, RES
+    MOV AH, 0
+    MOV BL, 10
+    DIV BL              
+
+
+    MOV BH, AH          
+
+
+   
+    ADD AL, 30H
+    MOV DL, AL
+    MOV AH, 2
+    INT 21H
+
+
+    
+    MOV AL, BH
+    ADD AL, 30H
+    MOV DL, AL
+    MOV AH, 2
+    INT 21H
+
+
+    CALL NEWLINE
+
+
+   
+    MOV AH, 4CH
+    INT 21H
+MAIN ENDP
+
+
+
+
+NEWLINE PROC
+    MOV AH, 2
+    MOV DL, 13         
+    INT 21H
+    MOV DL, 10          
+    INT 21H
+    RET
+NEWLINE ENDP
+
+
+END MAIN
