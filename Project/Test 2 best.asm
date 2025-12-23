@@ -1,0 +1,608 @@
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+HEADING     DB '*****BANK MANAGEMENT SYSTEM*****',10,13,'$'
+MENU_TITLE  DB 'MAIN MENU',10,13,'$'
+OPTION1     DB '1. CREATE NEW ACCOUNT',10,13,'$'
+OPTION2     DB '2. DEPOSIT MONEY',10,13,'$'
+OPTION3     DB '3. WITHDRAW MONEY',10,13,'$'
+OPTION4     DB '4. CHECK BALANCE',10,13,'$'
+OPTION5     DB '5. TRANSFER MONEY',10,13,'$'
+OPTION6     DB '6. EXIT',10,13,'$'
+CHOICE_MSG  DB 'ENTER YOUR CHOICE: $'
+
+ACC_NUM_MSG DB 'YOUR ACCOUNT NUMBER IS: $'
+INIT_DEP_MSG DB 'ENTER INITIAL DEPOSIT (MIN 500): $'
+DEPOSIT_MSG DB 'ENTER DEPOSIT AMOUNT: $'
+WITHDRAW_MSG DB 'ENTER WITHDRAW AMOUNT: $'
+BALANCE_MSG DB 'YOUR BALANCE IS: $'
+NEW_BAL_MSG DB 'NEW BALANCE: $'
+TRANSFER_MSG DB 'ENTER AMOUNT TO TRANSFER: $'
+TO_ACC_MSG  DB 'ENTER RECEIVER ACCOUNT NUMBER: $'
+TRANSFER_SUCCESS DB 'TRANSFER SUCCESSFUL!',10,13,'$'
+TRANSFER_FAIL DB 'TRANSFER FAILED!',10,13,'$'
+INVALID_ACC_MSG DB 'INVALID ACCOUNT NUMBER!',10,13,'$'
+
+SUCCESS_MSG DB 'OPERATION SUCCESSFUL!',10,13,'$'
+ACC_CREATED DB 'ACCOUNT CREATED!',10,13,'$'
+INSUFFICIENT DB 'INSUFFICIENT BALANCE!',10,13,'$'
+INVALID_MSG DB 'INVALID! TRY AGAIN.',10,13,'$'
+MIN_BAL_MSG DB 'MINIMUM 500 REQUIRED!',10,13,'$'
+THANK_MSG   DB 'THANK YOU!',10,13,'$'
+
+PIN_MSG       DB 'SET YOUR 4-DIGIT PIN: $'
+ENTER_PIN_MSG DB 'ENTER YOUR PIN: $'
+WRONG_PIN_MSG DB 'WRONG PIN! TRANSACTION CANCELLED.',10,13,'$'
+PRESS_KEY_MSG DB 'PRESS ANY KEY TO CONTINUE...$'
+
+PIN          DW 0
+ENTERED_PIN  DW 0
+
+NL          DB 10,13,'$'
+
+ACC_NUMBER  DW 100
+BALANCE     DW 0
+AMOUNT      DW 0
+TEMP        DW 0
+RECEIVER_ACC_NUM DW 0
+MIN_BAL     DW 500
+
+; For transfer simulation
+RECEIVER_ACC1     DW 1001    ; Receiver account 1
+RECEIVER_BAL1     DW 5000    ; Balance for account 1001
+RECEIVER_ACC2     DW 1002    ; Receiver account 2  
+RECEIVER_BAL2     DW 3000    ; Balance for account 1002
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+
+START: 
+    ; Clear screen
+    MOV AH,0
+    MOV AL,3
+    INT 10H
+    
+    LEA DX,HEADING
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,MENU_TITLE
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,OPTION1
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,OPTION2
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,OPTION3
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,OPTION4
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,OPTION5
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,OPTION6
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,CHOICE_MSG
+    MOV AH,9
+    INT 21H
+    
+    MOV AH,1
+    INT 21H
+    
+    CMP AL,'1'
+    JE CREATE_ACC
+    CMP AL,'2'
+    JE DEPOSIT
+    CMP AL,'3'
+    JE WITHDRAW
+    CMP AL,'4'
+    JE CHECK_BAL
+    CMP AL,'5'
+    JE TRANSFER_MONEY
+    CMP AL,'6'
+    JE EXIT_PROG
+    JMP INVALID
+
+CREATE_ACC:
+    ; Clear screen
+    MOV AH,0
+    MOV AL,3
+    INT 10H
+    
+    LEA DX,ACC_NUM_MSG
+    MOV AH,9
+    INT 21H
+    
+    ; Display account number
+    MOV AX,ACC_NUMBER
+    CALL PRINT_NUM
+    INC ACC_NUMBER
+    
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    
+    ; Set PIN
+    LEA DX,PIN_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_AMOUNT
+    MOV PIN,AX
+    
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    
+    LEA DX,INIT_DEP_MSG
+    MOV AH,9
+    INT 21H
+    
+    ; Read initial deposit amount
+    CALL READ_AMOUNT
+    MOV AMOUNT,AX
+    
+    CMP AX,MIN_BAL
+    JL MIN_ERROR
+    
+    MOV BALANCE,AX
+    
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,ACC_CREATED
+    MOV AH,9
+    INT 21H
+    
+    CALL PRESS_ANY_KEY
+    JMP START
+
+MIN_ERROR:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,MIN_BAL_MSG
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP CREATE_ACC
+
+DEPOSIT:
+    ; Clear screen
+    MOV AH,0
+    MOV AL,3
+    INT 10H
+    
+    MOV AX,BALANCE
+    CMP AX,0
+    JE NO_ACC
+    
+    LEA DX,DEPOSIT_MSG
+    MOV AH,9
+    INT 21H
+    
+    CALL READ_AMOUNT
+    MOV AMOUNT,AX
+    
+    CMP AX,0
+    JLE INVALID_AMT
+    
+    ; Ask for PIN
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,ENTER_PIN_MSG
+    MOV AH,9
+    INT 21H
+    
+    CALL READ_AMOUNT
+    MOV ENTERED_PIN,AX
+    
+    MOV AX,PIN
+    CMP AX,ENTERED_PIN
+    JNE WRONG_PIN
+    
+    ; Process deposit
+    MOV AX,AMOUNT
+    ADD BALANCE,AX
+    
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,SUCCESS_MSG
+    MOV AH,9
+    INT 21H
+    LEA DX,NEW_BAL_MSG
+    MOV AH,9
+    INT 21H
+    
+    MOV AX,BALANCE
+    CALL PRINT_NUM
+    
+    CALL PRESS_ANY_KEY
+    JMP START
+
+WITHDRAW:
+    ; Clear screen
+    MOV AH,0
+    MOV AL,3
+    INT 10H
+    
+    MOV AX,BALANCE
+    CMP AX,0
+    JE NO_ACC
+    
+    LEA DX,WITHDRAW_MSG
+    MOV AH,9
+    INT 21H
+    
+    CALL READ_AMOUNT
+    MOV AMOUNT,AX
+    
+    CMP AX,0
+    JLE INVALID_AMT
+    
+    ; Check if withdrawal amount is greater than current balance
+    MOV BX,BALANCE
+    CMP AX,BX
+    JG INSUFF
+    
+    ; Ask for PIN
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,ENTER_PIN_MSG
+    MOV AH,9
+    INT 21H
+    
+    CALL READ_AMOUNT
+    MOV ENTERED_PIN,AX
+    
+    MOV AX,PIN
+    CMP AX,ENTERED_PIN
+    JNE WRONG_PIN
+    
+    ; Process withdrawal
+    MOV AX,AMOUNT
+    SUB BALANCE,AX
+    
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,SUCCESS_MSG
+    MOV AH,9
+    INT 21H
+    LEA DX,NEW_BAL_MSG
+    MOV AH,9
+    INT 21H
+    
+    MOV AX,BALANCE
+    CALL PRINT_NUM
+    
+    CALL PRESS_ANY_KEY
+    JMP START
+
+TRANSFER_MONEY:
+    ; Clear screen
+    MOV AH,0
+    MOV AL,3
+    INT 10H
+    
+    MOV AX,BALANCE
+    CMP AX,0
+    JE NO_ACC
+    
+    ; Ask for receiver account number
+    LEA DX,TO_ACC_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_AMOUNT
+    MOV RECEIVER_ACC_NUM,AX
+    
+    ; Ask for amount
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,TRANSFER_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_AMOUNT
+    MOV AMOUNT,AX
+    
+    CMP AX,0
+    JLE TRANSFER_ERROR
+    
+    ; Check if transfer amount is greater than current balance
+    MOV BX,BALANCE
+    CMP AX,BX
+    JG TRANSFER_ERROR
+    
+    ; Ask for PIN
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,ENTER_PIN_MSG
+    MOV AH,9
+    INT 21H
+    
+    CALL READ_AMOUNT
+    MOV ENTERED_PIN,AX
+    
+    MOV AX,PIN
+    CMP AX,ENTERED_PIN
+    JNE WRONG_PIN
+    
+    ; Check receiver account and process transfer
+    MOV AX,RECEIVER_ACC_NUM
+    CMP AX,RECEIVER_ACC1
+    JE TRANSFER_TO_ACC1
+    CMP AX,RECEIVER_ACC2
+    JE TRANSFER_TO_ACC2
+    JMP INVALID_RECEIVER
+
+TRANSFER_TO_ACC1:
+    ; Deduct from sender
+    MOV AX,AMOUNT
+    SUB BALANCE,AX
+    ; Add to receiver 1
+    ADD RECEIVER_BAL1,AX
+    JMP TRANSFER_SUCCESSFUL
+
+TRANSFER_TO_ACC2:
+    ; Deduct from sender
+    MOV AX,AMOUNT
+    SUB BALANCE,AX
+    ; Add to receiver 2
+    ADD RECEIVER_BAL2,AX
+
+TRANSFER_SUCCESSFUL:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,TRANSFER_SUCCESS
+    MOV AH,9
+    INT 21H
+    LEA DX,NEW_BAL_MSG
+    MOV AH,9
+    INT 21H
+    
+    MOV AX,BALANCE
+    CALL PRINT_NUM
+    
+    CALL PRESS_ANY_KEY
+    JMP START
+
+INVALID_RECEIVER:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,INVALID_ACC_MSG
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP START
+
+TRANSFER_ERROR:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,TRANSFER_FAIL
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP START
+
+CHECK_BAL:
+    ; Clear screen
+    MOV AH,0
+    MOV AL,3
+    INT 10H
+    
+    MOV AX,BALANCE
+    CMP AX,0
+    JE NO_ACC
+    
+    ; Ask for PIN
+    LEA DX,ENTER_PIN_MSG
+    MOV AH,9
+    INT 21H
+    
+    CALL READ_AMOUNT
+    MOV ENTERED_PIN,AX
+    
+    MOV AX,PIN
+    CMP AX,ENTERED_PIN
+    JNE WRONG_PIN
+    
+    LEA DX,BALANCE_MSG
+    MOV AH,9
+    INT 21H
+    
+    MOV AX,BALANCE
+    CALL PRINT_NUM
+    
+    CALL PRESS_ANY_KEY
+    JMP START
+
+INSUFF:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,INSUFFICIENT
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP START
+
+WRONG_PIN:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,WRONG_PIN_MSG
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP START
+
+NO_ACC:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,INVALID_MSG
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP START
+
+INVALID_AMT:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,INVALID_MSG
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP START
+
+INVALID:
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,INVALID_MSG
+    MOV AH,9
+    INT 21H
+    CALL PRESS_ANY_KEY
+    JMP START
+
+EXIT_PROG:
+    ; Clear screen
+    MOV AH,0
+    MOV AL,3
+    INT 10H
+    
+    LEA DX,THANK_MSG
+    MOV AH,9
+    INT 21H
+    MOV AH,4CH
+    INT 21H
+
+;-------- PRINT NUMBER SUBROUTINE --------
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+
+    MOV CX,0
+    MOV BX,10
+
+    ; Handle zero case
+    CMP AX,0
+    JNE CONVERT_LOOP
+    MOV DL,'0'
+    MOV AH,2
+    INT 21H
+    JMP PRINT_DONE
+
+CONVERT_LOOP:
+    MOV DX,0
+    DIV BX
+    PUSH DX
+    INC CX
+    CMP AX,0
+    JNE CONVERT_LOOP
+
+PRINT_LOOP:
+    POP DX
+    ADD DL,'0'
+    MOV AH,2
+    INT 21H
+    LOOP PRINT_LOOP
+
+PRINT_DONE:
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+;-------- READ AMOUNT SUBROUTINE --------
+READ_AMOUNT PROC
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    
+    MOV BX,0
+    
+READ_CHAR:
+    MOV AH,1
+    INT 21H
+    
+    CMP AL,13
+    JE DONE_READ
+    
+    CMP AL,'0'
+    JB DONE_READ
+    CMP AL,'9'
+    JA DONE_READ
+    
+    SUB AL,'0'
+    MOV AH,0
+    
+    ; BX = BX * 10 + AX
+    PUSH AX
+    MOV AX,BX
+    MOV CX,10
+    MUL CX
+    MOV BX,AX
+    POP AX
+    
+    ADD BX,AX
+    JMP READ_CHAR
+    
+DONE_READ:
+    MOV AX,BX
+    
+    POP DX
+    POP CX
+    POP BX
+    RET
+READ_AMOUNT ENDP
+
+;-------- PRESS ANY KEY SUBROUTINE --------
+PRESS_ANY_KEY PROC
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    LEA DX,PRESS_KEY_MSG
+    MOV AH,9
+    INT 21H
+    MOV AH,1
+    INT 21H
+    RET
+PRESS_ANY_KEY ENDP
+
+END MAIN
