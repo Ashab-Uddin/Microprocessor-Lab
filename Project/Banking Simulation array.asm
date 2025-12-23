@@ -1,0 +1,483 @@
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+;---------------- MESSAGES ----------------
+HEADING      DB '***** BANKING SIMULATION *****',10,13,'$'
+MENU_TITLE   DB '******** MAIN MENU ********',10,13,'$'
+OPTION1      DB '1. CREATE ACCOUNT',10,13,'$'
+OPTION2      DB '2. DEPOSIT',10,13,'$'
+OPTION3      DB '3. WITHDRAW',10,13,'$'
+OPTION4      DB '4. CHECK BALANCE',10,13,'$'
+OPTION5      DB '5. TRANSFER',10,13,'$'
+OPTION6      DB '6. EXIT',10,13,'$'
+
+CHOICE_MSG    DB 'Enter your choice: $'
+ACC_NUM_MSG   DB 'Your account number: $'
+ENTER_ACCNO   DB 'Enter account number: $'
+INIT_DEP_MSG  DB 'Enter initial deposit (min 500): $'
+DEPOSIT_MSG   DB 'Enter deposit amount: $'
+WITHDRAW_MSG  DB 'Enter withdraw amount: $'
+TRANSFER_MSG  DB 'Enter transfer amount: $'
+BALANCE_MSG   DB 'Your balance: $'
+PIN_MSG       DB 'Set 4-digit PIN: $'
+ENTER_PIN_MSG DB 'Enter PIN: $'
+
+ACC_CREATED   DB 'Account created successfully!',10,13,'$'
+SUCCESS_MSG   DB 'Operation successful!',10,13,'$'
+TRANSFER_OK   DB 'Transfer successful!',10,13,'$'
+INSUFFICIENT  DB 'Insufficient balance!',10,13,'$'
+ACC_NOT_FOUND DB 'Account not found!',10,13,'$'
+WRONG_PIN_MSG DB 'Wrong PIN! Access denied.',10,13,'$'
+MIN_BAL_MSG   DB 'Minimum 500 required!',10,13,'$'
+INVALID_MSG   DB 'Invalid option!',10,13,'$'
+THANK_MSG     DB 'Thank you!',10,13,'$'
+NL            DB 10,13,'$'
+
+;---------------- VARIABLES ----------------
+MAX_ACC     EQU 10
+MIN_BAL     DW 500
+
+ACC_NUMBERS DW MAX_ACC DUP(0)
+BALANCES    DW MAX_ACC DUP(0)
+PINS        DW MAX_ACC DUP(0)
+
+ACC_COUNT   DW 0
+NEXT_ACCNO  DW 1000
+CUR_INDEX   DW -1
+TEMP        DW 0
+ENTERED_ACC DW 0
+FOUND_FLAG  DB 0
+
+.CODE
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS,AX
+
+START:
+    CALL PRINT_NL
+    LEA DX,HEADING
+    MOV AH,9
+    INT 21H
+    CALL PRINT_NL
+
+    LEA DX,MENU_TITLE
+    MOV AH,9
+    INT 21H
+    LEA DX,OPTION1
+    MOV AH,9
+    INT 21H
+    LEA DX,OPTION2
+    MOV AH,9
+    INT 21H
+    LEA DX,OPTION3
+    MOV AH,9
+    INT 21H
+    LEA DX,OPTION4
+    MOV AH,9
+    INT 21H
+    LEA DX,OPTION5
+    MOV AH,9
+    INT 21H
+    LEA DX,OPTION6
+    MOV AH,9
+    INT 21H
+
+    CALL PRINT_NL
+    LEA DX,CHOICE_MSG
+    MOV AH,9
+    INT 21H
+
+    MOV AH,1
+    INT 21H
+    SUB AL, '0'  ; Convert ASCII to number
+
+    CMP AL,1
+    JE CREATE_ACC
+    CMP AL,2
+    JE DEPOSIT
+    CMP AL,3
+    JE WITHDRAW
+    CMP AL,4
+    JE CHECK_BAL
+    CMP AL,5
+    JE TRANSFER
+    CMP AL,6
+    JE EXIT_PROG
+    JMP INVALID
+
+;================ CREATE ACCOUNT =================
+CREATE_ACC:
+    MOV AX,ACC_COUNT
+    CMP AX,MAX_ACC
+    JGE START
+
+    MOV BX,AX
+    SHL BX,1
+
+    MOV AX,NEXT_ACCNO
+    MOV ACC_NUMBERS[BX],AX
+    INC NEXT_ACCNO
+
+    CALL PRINT_NL
+    LEA DX,ACC_NUM_MSG
+    MOV AH,9
+    INT 21H
+    MOV AX,ACC_NUMBERS[BX]
+    CALL PRINT_NUM
+    CALL PRINT_NL
+
+    LEA DX,INIT_DEP_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_NUMBER
+    MOV AX,TEMP
+    CMP AX,MIN_BAL
+    JL MIN_ERROR
+    MOV BALANCES[BX],AX
+
+    LEA DX,PIN_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_NUMBER
+    MOV PINS[BX],AX
+
+    INC ACC_COUNT
+    CALL PRINT_NL
+    LEA DX,ACC_CREATED
+    MOV AH,9
+    INT 21H
+    JMP START
+
+MIN_ERROR:
+    CALL PRINT_NL
+    LEA DX,MIN_BAL_MSG
+    MOV AH,9
+    INT 21H
+    JMP START
+
+;================ FIND ACCOUNT =================
+FIND_ACCOUNT PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    
+    CALL PRINT_NL
+    LEA DX,ENTER_ACCNO
+    MOV AH,9
+    INT 21H
+    CALL READ_NUMBER
+    MOV ENTERED_ACC,AX
+
+    MOV CX,ACC_COUNT
+    CMP CX,0
+    JE NOT_FOUND
+    MOV BX,0
+    MOV FOUND_FLAG,0
+
+SEARCH:
+    MOV AX,ACC_NUMBERS[BX]
+    CMP AX,ENTERED_ACC
+    JE FOUND_ACC
+    ADD BX,2
+    LOOP SEARCH
+    JMP NOT_FOUND
+
+FOUND_ACC:
+    MOV CUR_INDEX,BX
+    MOV FOUND_FLAG,1
+    POP CX
+    POP BX
+    POP AX
+    RET
+
+NOT_FOUND:
+    CALL PRINT_NL
+    LEA DX,ACC_NOT_FOUND
+    MOV AH,9
+    INT 21H
+    MOV CUR_INDEX,-1
+    POP CX
+    POP BX
+    POP AX
+    JMP START_RETURN
+
+FIND_ACCOUNT ENDP
+
+;================ CHECK PIN =================
+CHECK_PIN PROC
+    PUSH AX
+    PUSH BX
+    
+    CMP CUR_INDEX,-1
+    JE PIN_FAIL
+    
+    CALL PRINT_NL
+    LEA DX,ENTER_PIN_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_NUMBER
+
+    MOV BX,CUR_INDEX
+    MOV AX,PINS[BX]
+    CMP AX,TEMP
+    JE PIN_OK
+
+PIN_FAIL:
+    CALL PRINT_NL
+    LEA DX,WRONG_PIN_MSG
+    MOV AH,9
+    INT 21H
+    MOV CUR_INDEX,-1
+    POP BX
+    POP AX
+    JMP START_RETURN
+
+PIN_OK:
+    POP BX
+    POP AX
+    RET
+CHECK_PIN ENDP
+
+;================ DEPOSIT =================
+DEPOSIT:
+    CALL FIND_ACCOUNT
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+    CALL CHECK_PIN
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+    
+    LEA DX,DEPOSIT_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_NUMBER
+    MOV BX,CUR_INDEX
+    MOV AX,BALANCES[BX]
+    ADD AX,TEMP
+    MOV BALANCES[BX],AX
+    JMP SHOW_BAL_SUCCESS
+
+;================ WITHDRAW =================
+WITHDRAW:
+    CALL FIND_ACCOUNT
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+    CALL CHECK_PIN
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+    
+    LEA DX,WITHDRAW_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_NUMBER
+    MOV BX,CUR_INDEX
+    MOV AX,BALANCES[BX]
+    CMP AX,TEMP
+    JL INSUFF
+    SUB AX,TEMP
+    CMP AX,MIN_BAL
+    JL INSUFF
+    MOV BALANCES[BX],AX
+    JMP SHOW_BAL_SUCCESS
+
+INSUFF:
+    CALL PRINT_NL
+    LEA DX,INSUFFICIENT
+    MOV AH,9
+    INT 21H
+    JMP START
+
+;================ CHECK BALANCE =================
+CHECK_BAL:
+    CALL FIND_ACCOUNT
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+    CALL CHECK_PIN
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+
+SHOW_BAL_SUCCESS:
+    CALL PRINT_NL
+    LEA DX,BALANCE_MSG
+    MOV AH,9
+    INT 21H
+    MOV BX,CUR_INDEX
+    MOV AX,BALANCES[BX]
+    CALL PRINT_NUM
+    CALL PRINT_NL
+    JMP START
+
+;================ TRANSFER =================
+TRANSFER:
+    ; Sender
+    CALL FIND_ACCOUNT
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+    CALL CHECK_PIN
+    CMP CUR_INDEX,-1
+    JE START_RETURN
+    
+    MOV BX,CUR_INDEX
+    PUSH BX  ; Save sender index
+
+    LEA DX,TRANSFER_MSG
+    MOV AH,9
+    INT 21H
+    CALL READ_NUMBER
+    MOV CX,AX  ; Save amount in CX
+
+    POP BX  ; Restore sender index
+    PUSH BX  ; Save again
+    
+    MOV AX,BALANCES[BX]
+    CMP AX,CX
+    JL TRANSFER_INSUFF
+    SUB AX,MIN_BAL
+    CMP AX,CX
+    JL TRANSFER_INSUFF
+
+    ; Receiver
+    CALL FIND_ACCOUNT
+    CMP CUR_INDEX,-1
+    JE TRANSFER_FAIL
+    MOV SI,CUR_INDEX
+    
+    POP BX  ; Restore sender index
+    
+    ; Update sender balance
+    MOV AX,BALANCES[BX]
+    SUB AX,CX
+    MOV BALANCES[BX],AX
+    
+    ; Update receiver balance
+    MOV AX,BALANCES[SI]
+    ADD AX,CX
+    MOV BALANCES[SI],AX
+
+    CALL PRINT_NL
+    LEA DX,TRANSFER_OK
+    MOV AH,9
+    INT 21H
+    JMP START
+
+TRANSFER_INSUFF:
+    POP BX  ; Clean stack
+    CALL PRINT_NL
+    LEA DX,INSUFFICIENT
+    MOV AH,9
+    INT 21H
+    JMP START
+
+TRANSFER_FAIL:
+    POP BX  ; Clean stack
+    JMP START
+
+;================ EXIT / INVALID =================
+INVALID:
+    CALL PRINT_NL
+    LEA DX,INVALID_MSG
+    MOV AH,9
+    INT 21H
+
+START_RETURN:
+    JMP START
+
+EXIT_PROG:
+    CALL PRINT_NL
+    LEA DX,THANK_MSG
+    MOV AH,9
+    INT 21H
+    MOV AH,4CH
+    INT 21H
+
+;================ PRINT NUMBER =================
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV CX,0
+    MOV BX,10
+    
+    CMP AX,0
+    JNE P1
+    MOV DL,'0'
+    MOV AH,2
+    INT 21H
+    JMP PRINT_DONE
+    
+P1:
+    XOR DX,DX
+    DIV BX
+    PUSH DX
+    INC CX
+    CMP AX,0
+    JNE P1
+    
+P2:
+    POP DX
+    ADD DL,'0'
+    MOV AH,2
+    INT 21H
+    LOOP P2
+    
+PRINT_DONE:
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+;================ READ NUMBER =================
+READ_NUMBER PROC
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    
+    MOV BX,0
+    MOV CX,10
+    
+READ_LOOP:
+    MOV AH,1
+    INT 21H
+    CMP AL,13
+    JE READ_DONE
+    CMP AL,'0'
+    JL READ_LOOP
+    CMP AL,'9'
+    JG READ_LOOP
+    
+    SUB AL,'0'
+    MOV AH,0
+    PUSH AX
+    MOV AX,BX
+    MUL CX
+    MOV BX,AX
+    POP AX
+    ADD BX,AX
+    JMP READ_LOOP
+    
+READ_DONE:
+    MOV AX,BX
+    MOV TEMP,AX
+    POP DX
+    POP CX
+    POP BX
+    RET
+READ_NUMBER ENDP
+
+;================ PRINT NEWLINE =================
+PRINT_NL PROC
+    PUSH AX
+    PUSH DX
+    LEA DX,NL
+    MOV AH,9
+    INT 21H
+    POP DX
+    POP AX
+    RET
+PRINT_NL ENDP
+
+END MAIN
